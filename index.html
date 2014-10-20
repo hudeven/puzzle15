@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+
+<body>
+    <div id = "controlPanel">
+        <h1>Puzzle</h1>
+        <label class="info" id = "clock">Time: 00:00:00</label>&nbsp;&nbsp;
+        <label class="info" id = "moves">Moves: 0</label>&nbsp;&nbsp;
+        <br><br>
+        <button class="control" onclick="newGame(20)">New game</button>
+        <button class="control" onclick="oneStep2Win()">Easy game</button>&nbsp;&nbsp;
+        <label>Height:</label>
+        <input type="text" id="iHeight">&nbsp;&nbsp;
+        <label>Width:</label>
+        <input type="text" id="iWidth">&nbsp;&nbsp;
+    </div>
+        <br>
+        
+
+    <div id="board">
+<script>
+
+var HEIGHT = 4;
+var WIDTH = 4;
+document.getElementById("iHeight").value = HEIGHT;
+document.getElementById("iWidth").value = WIDTH;
+
+var posArray = new Array();
+var space = "*";
+
+//initially draw the blocks
+init();
+
+
+/****** functions ******/
+//start a new Game with certain difficult level
+function newGame(level) {
+    init();
+    shuffle(level);
+}
+
+//start a new game with 1 step to win, for validate win state
+function oneStep2Win() {
+    init();
+    exchange(posArray[HEIGHT-1][WIDTH-1], posArray[HEIGHT-1][WIDTH-2]);    
+}
+
+//exchange 2 random blocks, for n times
+function shuffle(n) {
+    var ai, aj, bi, bj;
+    for(var i=0; i<n; i++) {
+          ai = Math.floor(Math.random()*HEIGHT);
+          aj = Math.floor(Math.random()*WIDTH);
+          bi = Math.floor(Math.random()*HEIGHT);
+          bj = Math.floor(Math.random()*WIDTH);
+          exchange(posArray[ai][aj], posArray[bi][bj]);
+    }
+}
+
+//exchange the content of 2 elements
+function exchange(a,b) {
+    var aElem = document.getElementById(a.id);
+    var bElem = document.getElementById(b.id);
+   
+    var tmp = aElem.innerHTML;
+    aElem.innerHTML = bElem.innerHTML;
+    bElem.innerHTML = tmp;
+   
+    tmp = a.content;
+    a.content = b.content;
+    b.content = tmp;
+}
+
+
+//initialize the whole game
+function init() {
+    //initialize time
+    initTime();
+    //initialize moves
+    initMove();
+    //clear the container
+	document.getElementById("board").innerHTML="";
+
+    HEIGHT = document.getElementById("iHeight").value;
+    WIDTH = document.getElementById("iWidth").value;
+
+    for (var i = 0; i < HEIGHT; i++) {
+		posArray[i] = new Array();
+	}
+	for(var k = 0; k < HEIGHT * WIDTH; k++) {
+		var i = Math.floor(k/WIDTH);
+		var j = k%WIDTH;
+
+		var lab = document.createElement("button");
+		lab.id = k + 1;
+		lab.className = "block";
+    	lab.addEventListener("click", onClick, true);
+		var content;
+		if (k == HEIGHT * WIDTH -1)
+			content = space;
+		else
+			content = k + 1;
+
+		var node = document.createTextNode(content);
+		lab.appendChild(node);
+		var elem = document.getElementById("board");
+		elem.appendChild(lab);
+        if(j==WIDTH-1)
+            elem.appendChild(document.createElement('br'));
+        if(i==6) {
+            i = i;    
+        }
+		posArray[i][j] = new Object();
+		posArray[i][j].id = lab.id;
+		posArray[i][j].content = content;     
+	}
+}
+
+//on click event for each block button
+function onClick() {
+    var valid = false;
+    var display = document.getElementById("display");
+    var id = this.id;
+    var i = Math.floor((id-1)/WIDTH);
+    var j = (id-1)%WIDTH;
+    //display.innerHTML = this.id+"  i="+i+"  j="+j;
+    if(i-1>=0 && posArray[i-1][j].content==space) {
+        //space on the top
+	    exchange(posArray[i][j], posArray[i-1][j]);
+        valid = true;
+    } else if(i+1<HEIGHT && posArray[i+1][j].content==space) { 
+	    //space on the bottom
+	    exchange(posArray[i][j], posArray[i+1][j]);
+        valid = true;
+    } else if(j-1>=0 && posArray[i][j-1].content==space) { 
+	    //space on the left
+	    exchange(posArray[i][j], posArray[i][j-1]);
+        valid = true;
+    } else if(j+1<WIDTH && posArray[i][j+1].content==space) {
+	    //space on the right
+	    exchange(posArray[i][j], posArray[i][j+1]);
+        valid = true;
+    }
+    if(valid) {
+       addMove();
+       winCheck();    
+    }
+        
+}
+
+
+
+/****** Win module ******/
+//check if it's in win state
+function winCheck() {
+    var win = true;
+    for(var i=0; i<HEIGHT; i++) {
+        for(var j=0; j<WIDTH; j++) {
+            if(posArray[i][j].id != posArray[i][j].content) 
+                if(!(i==HEIGHT-1 && j==WIDTH-1)) 
+                    win = false;           
+        }   
+    }   
+    if(win)
+        winBubble();
+}
+//pop up a dialog to show win and play agian
+function winBubble() {
+    if (confirm("You win!\n"+
+        "Moves: "+move_count+"\n"+
+        "Time: "+seconds+"\n"+
+         "Play again?") == true) {
+        newGame(20);
+    } else {
+        
+    }    
+}
+
+
+
+
+
+/****** Time module ******/
+var flap = true;
+var seconds = 0;
+var refreshIntervalId;
+function initTime() {
+    seconds = 0;
+    if(refreshIntervalId != undefined)
+        clearInterval(refreshIntervalId);
+
+    refreshIntervalId = setInterval(setTime, 1000);
+}
+function setTime() {
+    ++seconds;
+    var h = length2(parseInt(seconds/3600));
+    var m = length2(parseInt(seconds/60));
+    var s = length2(seconds%60);
+
+    if(flap)
+        document.getElementById('clock').innerHTML = "Time: "+h+":"+m+":"+s;
+    else
+        document.getElementById('clock').innerHTML = "Time: "+h+":"+m+" "+s;
+    flap = !flap;
+}
+
+//format numbers to length 2
+function length2(i) {
+    if(i<10){
+        i = "0" + i;        
+    }    
+    return i;
+}
+
+
+
+
+/****** Move module ******/
+var move_count = 0;
+//update move display
+function updateMove() {
+    var moveElem = document.getElementById("moves");
+    moveElem.innerHTML = "Moves: "+ move_count;
+}
+function addMove() {
+    move_count++;    
+    updateMove();
+}
+function initMove() {
+    move_count = 0;
+    updateMove();    
+}
+
+
+</script>
+</div>
+</body>
+</html>
