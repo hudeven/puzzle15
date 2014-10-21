@@ -84,7 +84,10 @@ function init() {
     //initialize moves
     initMove();
     //clear the container
-	document.getElementById("board").innerHTML="";
+    var boardElem = document.getElementById("board");
+    boardElem.innerHTML = "";
+    boardElem.appendChild(document.createElement('br'));
+    boardElem.appendChild(document.createElement('br'));
 
     HEIGHT = document.getElementById("iHeight").value;
     WIDTH = document.getElementById("iWidth").value;
@@ -108,10 +111,9 @@ function init() {
 
 		var node = document.createTextNode(content);
 		lab.appendChild(node);
-		var elem = document.getElementById("board");
-		elem.appendChild(lab);
+		boardElem.appendChild(lab);
         if(j==WIDTH-1)
-            elem.appendChild(document.createElement('br'));
+            boardElem.appendChild(document.createElement('br'));
         if(i==6) {
             i = i;    
         }
@@ -119,6 +121,10 @@ function init() {
 		posArray[i][j].id = lab.id;
 		posArray[i][j].content = content;     
 	}
+    boardElem.appendChild(document.createElement('br'));
+    boardElem.appendChild(document.createElement('br'));
+
+
 }
 
 //on click event for each block button
